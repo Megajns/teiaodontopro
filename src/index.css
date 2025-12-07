@@ -1,0 +1,393 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Dental Clinic Management System Design System */
+/* All colors are HSL for perfect theming */
+
+@layer base {
+  :root {
+    /* Core medical theme */
+    --background: 210 20% 98%;
+    --foreground: 215 25% 27%;
+
+    /* Cards and surfaces */
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 27%;
+
+    /* Popover components */
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 27%;
+
+    /* Medical blue primary */
+    --primary: 199 89% 48%;
+    --primary-foreground: 0 0% 98%;
+    --primary-hover: 199 89% 42%;
+    
+    /* Dental green secondary */
+    --secondary: 158 64% 52%;
+    --secondary-foreground: 0 0% 98%;
+    --secondary-hover: 158 64% 46%;
+
+    /* Muted elements */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    /* Accent colors */
+    --accent: 210 40% 96%;
+    --accent-foreground: 215 25% 27%;
+
+    /* Status colors */
+    --success: 158 64% 52%;
+    --success-foreground: 0 0% 98%;
+    --warning: 48 96% 53%;
+    --warning-foreground: 215 25% 27%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Borders and inputs */
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 199 89% 48%;
+
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 215 25% 27%;
+    --sidebar-primary: 199 89% 48%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 210 40% 96%;
+    --sidebar-accent-foreground: 215 25% 27%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 199 89% 48%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* Dark theme for medical system */
+    --background: 215 28% 17%;
+    --foreground: 210 20% 98%;
+
+    --card: 215 28% 20%;
+    --card-foreground: 210 20% 98%;
+
+    --popover: 215 28% 20%;
+    --popover-foreground: 210 20% 98%;
+
+    --primary: 199 89% 48%;
+    --primary-foreground: 0 0% 98%;
+    --primary-hover: 199 89% 42%;
+
+    --secondary: 158 64% 52%;
+    --secondary-foreground: 0 0% 98%;
+    --secondary-hover: 158 64% 46%;
+
+    --muted: 215 28% 23%;
+    --muted-foreground: 215 16% 65%;
+
+    --accent: 215 28% 23%;
+    --accent-foreground: 210 20% 98%;
+
+    --success: 158 64% 52%;
+    --success-foreground: 0 0% 98%;
+    --warning: 48 96% 53%;
+    --warning-foreground: 215 25% 27%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 215 28% 23%;
+    --input: 215 28% 23%;
+    --ring: 199 89% 48%;
+
+    --sidebar-background: 215 28% 15%;
+    --sidebar-foreground: 210 20% 98%;
+    --sidebar-primary: 199 89% 48%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 215 28% 20%;
+    --sidebar-accent-foreground: 210 20% 98%;
+    --sidebar-border: 215 28% 23%;
+    --sidebar-ring: 199 89% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  
+  /* Medical gradients and utilities */
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-hover)));
+  }
+  
+  .gradient-secondary {
+    background: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--secondary-hover)));
+  }
+  
+  .gradient-hero {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
+  }
+  
+  .shadow-medical {
+    box-shadow: 0 4px 16px hsla(var(--foreground) / 0.1);
+  }
+  
+  .shadow-card {
+    box-shadow: 0 2px 8px hsla(var(--foreground) / 0.08);
+  }
+}
+
+@layer components {
+  /* Medical card component */
+  .medical-card {
+    @apply bg-card border border-border rounded-lg shadow-card p-6;
+  }
+  
+  /* Status indicators */
+  .status-active {
+    @apply bg-success/20 text-success border border-success/30 px-2 py-1 rounded-full text-xs font-medium;
+  }
+  
+  .status-pending {
+    @apply bg-warning/20 text-warning border border-warning/30 px-2 py-1 rounded-full text-xs font-medium;
+  }
+  
+  .status-inactive {
+    @apply bg-destructive/20 text-destructive border border-destructive/30 px-2 py-1 rounded-full text-xs font-medium;
+  }
+  
+  /* Mobile optimizations */
+  .mobile-card {
+    @apply shadow-sm border border-border rounded-lg;
+  }
+  
+  .mobile-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Custom mobile responsiveness */
+@media (max-width: 768px) {
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Better mobile card spacing */
+  .space-y-4 > * + * {
+    margin-top: 1rem;
+  }
+  
+  /* Ensure text doesn't overflow on small screens */
+  .truncate-mobile {
+    @apply truncate max-w-[120px];
+  }
+}
+
+@media (max-width: 640px) {
+  /* Mobile navigation improvements */
+  .sidebar-overlay {
+    @apply fixed inset-0 bg-black/50 z-40;
+  }
+  
+  /* Tighter spacing on mobile */
+  .medical-card {
+    @apply p-4;
+  }
+}
+
+/* Calendar appointments indicator */
+.has-appointments {
+  position: relative;
+  font-weight: 600 !important;
+}
+
+.has-appointments::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: hsl(var(--primary));
+}
+
+/* React Day Picker Custom Styles */
+.rdp {
+  --rdp-cell-size: 36px;
+  --rdp-accent-color: hsl(var(--primary));
+  --rdp-background-color: hsl(var(--background));
+  --rdp-accent-color-dark: hsl(var(--primary));
+  --rdp-background-color-dark: hsl(var(--background));
+  --rdp-outline: 2px solid hsl(var(--ring));
+  --rdp-outline-selected: 2px solid hsl(var(--primary));
+  margin: 0;
+}
+
+.rdp-months {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 640px) {
+  .rdp-months {
+    flex-direction: row;
+  }
+}
+
+.rdp-month {
+  margin: 0;
+  padding: 0;
+}
+
+.rdp-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+}
+
+.rdp-head_cell {
+  width: var(--rdp-cell-size);
+  height: var(--rdp-cell-size);
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+  padding: 0;
+}
+
+.rdp-cell {
+  width: var(--rdp-cell-size);
+  height: var(--rdp-cell-size);
+  text-align: center;
+  position: relative;
+  padding: 0;
+}
+
+.rdp-button {
+  width: var(--rdp-cell-size);
+  height: var(--rdp-cell-size);
+  border: none;
+  background: transparent;
+  color: hsl(var(--foreground));
+  font-size: 0.875rem;
+  cursor: pointer;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.rdp-button:hover {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.rdp-button:focus {
+  outline: var(--rdp-outline);
+  outline-offset: 2px;
+}
+
+.rdp-day_today {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+  font-weight: 600;
+}
+
+.rdp-day_selected {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  font-weight: 600;
+}
+
+.rdp-day_selected:hover {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+}
+
+.rdp-day_outside {
+  color: hsl(var(--muted-foreground));
+  opacity: 0.5;
+}
+
+.rdp-day_disabled {
+  color: hsl(var(--muted-foreground));
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rdp-day_disabled:hover {
+  background: transparent;
+}
+
+.rdp-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 1rem 0;
+  margin: 0;
+}
+
+.rdp-caption_label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  margin: 0;
+}
+
+.rdp-nav {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.rdp-nav_button {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid hsl(var(--border));
+  background: transparent;
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  color: hsl(var(--foreground));
+}
+
+.rdp-nav_button:hover {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.rdp-nav_button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rdp-nav_button:disabled:hover {
+  background: transparent;
+}
+
+.rdp-nav_button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Dark mode adjustments */
+.dark .rdp {
+  --rdp-background-color: hsl(var(--background));
+  --rdp-accent-color: hsl(var(--primary));
+}
+
+/* Ensure calendar is properly sized */
+.rdp-root {
+  max-width: 100%;
+}
