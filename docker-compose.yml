@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  traefik:
+    image: traefik:v3.1
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "letsencrypt:/letsencrypt"
+    networks:
+      - proxy
+
+  app:
+    image: ${DOCKER_IMAGE:-${DOCKERHUB_USER}/odontopro}:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      APP_PORT: ${APP_PORT:-3000}
+      DOMAIN: ${DOMAIN}
+      # ...adicione aqui outras variáveis do .env usando ${VAR_NAME} para o Portainer preencher...
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.odontopro.rule: Host(`${DOMAIN}`)
+      traefik.http.routers.odontopro.entrypoints: websecure
+      traefik.http.routers.odontopro.tls.certresolver: letsencrypt
+      traefik.http.services.odontopro.loadbalancer.server.port: "${APP_PORT:-3000}"
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: false
+
+volumes:
+  letsencrypt:
