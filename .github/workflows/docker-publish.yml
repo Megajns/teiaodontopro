@@ -20,5 +20,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/odontopro:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/odontopro:${{ github.ref_name }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/teiaodonto:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/teiaodonto:${{ github.ref_name }}
