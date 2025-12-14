@@ -34,6 +34,46 @@ RUN if [ -f bun.lockb ]; then \
         npm run build; \
     fi
 
+# Inject production debug console logs into dist/index.html
+RUN node - <<'NODE'
+const fs = require('fs');
+const p = 'dist/index.html';
+if (!fs.existsSync(p)) process.exit(0);
+let html = fs.readFileSync(p, 'utf8');
+if (html.includes('__ODONTOPRO_DEBUG__')) process.exit(0);
+
+const snippet = `
+<script>
+(function(){
+  if (window.__ODONTOPRO_DEBUG__) return;
+  window.__ODONTOPRO_DEBUG__ = true;
+  const log = (...a) => console.log('[odontopro]', ...a);
+
+  log('boot', { href: location.href, baseURI: document.baseURI, ua: navigator.userAgent });
+  log('scripts', Array.from(document.querySelectorAll('script[src]')).map(s => s.src));
+
+  window.addEventListener('error', (e) => {
+    log('window.error', {
+      message: e && e.message,
+      filename: e && e.filename,
+      lineno: e && e.lineno,
+      colno: e && e.colno,
+      error: e && e.error ? (e.error.stack || String(e.error)) : null
+    });
+  });
+
+  window.addEventListener('unhandledrejection', (e) => {
+    const r = e && e.reason;
+    log('unhandledrejection', { reason: r ? (r.stack || r.message || String(r)) : r });
+  });
+})();
+</script>
+`;
+
+html = html.includes('</head>') ? html.replace('</head>', snippet + '\n</head>') : (html + snippet);
+fs.writeFileSync(p, html);
+NODE
+
 # Verify build output
 RUN ls -la dist/
 
