@@ -17,6 +17,12 @@ RUN if [ -f bun.lockb ]; then \
         npm ci --frozen-lockfile; \
     fi
 
+# Expose Vite env at build-time (set these as Build Args in Portainer)
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+ENV VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+ENV VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+
 # Copy source code
 COPY src/ ./src/
 COPY public/ ./public/
@@ -28,7 +34,9 @@ COPY postcss.config.js ./
 COPY components.json ./
 
 # Build the application
-RUN if [ -f bun.lockb ]; then \
+RUN test -n "$VITE_SUPABASE_URL" || (echo "Missing build arg: VITE_SUPABASE_URL" >&2; exit 1) && \
+    test -n "$VITE_SUPABASE_ANON_KEY" || (echo "Missing build arg: VITE_SUPABASE_ANON_KEY" >&2; exit 1) && \
+    if [ -f bun.lockb ]; then \
         bun run build; \
     else \
         npm run build; \
