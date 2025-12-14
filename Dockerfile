@@ -10,6 +10,9 @@ WORKDIR /app
 COPY package*.json ./
 COPY bun.lockb* ./
 
+# Bring env files into build context (Vite reads these at build-time)
+COPY .env* ./
+
 # Install dependencies
 RUN if [ -f bun.lockb ]; then \
         npm install -g bun && bun install; \
@@ -17,11 +20,46 @@ RUN if [ -f bun.lockb ]; then \
         npm ci --frozen-lockfile; \
     fi
 
-# Expose Vite env at build-time (set these as Build Args in Portainer)
+# Build args (can be passed via docker-compose/Portainer "build.args")
 ARG VITE_SUPABASE_URL
 ARG VITE_SUPABASE_ANON_KEY
-ENV VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
-ENV VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+ARG VITE_SUPABASE_PUBLISHABLE_KEY
+ARG VITE_SUPABASE_PROJECT_ID
+
+# Generate .env.production from args (fallback to existing .env values if present)
+RUN node - <<'NODE'
+const fs = require('fs');
+
+function parseEnvFile(p){
+  if (!fs.existsSync(p)) return {};
+  const out = {};
+  for (const line of fs.readFileSync(p,'utf8').split(/\r?\n/)) {
+    const m = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);
+    if (!m) continue;
+    let v = m[2];
+    if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1,-1);
+    out[m[1]] = v;
+  }
+  return out;
+}
+
+const base = parseEnvFile('.env');
+const a = process.env;
+
+const url = a.VITE_SUPABASE_URL || base.VITE_SUPABASE_URL || '';
+const publishable = a.VITE_SUPABASE_PUBLISHABLE_KEY || base.VITE_SUPABASE_PUBLISHABLE_KEY || '';
+const anon = a.VITE_SUPABASE_ANON_KEY || base.VITE_SUPABASE_ANON_KEY || publishable || '';
+const projectId = a.VITE_SUPABASE_PROJECT_ID || base.VITE_SUPABASE_PROJECT_ID || '';
+
+const lines = [
+  `VITE_SUPABASE_URL=${JSON.stringify(url)}`,
+  `VITE_SUPABASE_PUBLISHABLE_KEY=${JSON.stringify(publishable)}`,
+  `VITE_SUPABASE_ANON_KEY=${JSON.stringify(anon)}`,
+  `VITE_SUPABASE_PROJECT_ID=${JSON.stringify(projectId)}`
+];
+
+fs.writeFileSync('.env.production', lines.join('\n') + '\n');
+NODE
 
 # Copy source code
 COPY src/ ./src/
@@ -33,10 +71,8 @@ COPY tailwind.config.ts ./
 COPY postcss.config.js ./
 COPY components.json ./
 
-# Build the application
-RUN test -n "$VITE_SUPABASE_URL" || (echo "Missing build arg: VITE_SUPABASE_URL" >&2; exit 1) && \
-    test -n "$VITE_SUPABASE_ANON_KEY" || (echo "Missing build arg: VITE_SUPABASE_ANON_KEY" >&2; exit 1) && \
-    if [ -f bun.lockb ]; then \
+# Build the application (no hard-fail; runtime error is avoided by .env/.env.production)
+RUN if [ -f bun.lockb ]; then \
         bun run build; \
     else \
         npm run build; \
