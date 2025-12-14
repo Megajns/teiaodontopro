@@ -47,12 +47,59 @@ const snippet = `
 (function(){
   if (window.__ODONTOPRO_DEBUG__) return;
   window.__ODONTOPRO_DEBUG__ = true;
-  const log = (...a) => console.log('[odontopro]', ...a);
 
-  log('boot', { href: location.href, baseURI: document.baseURI, ua: navigator.userAgent });
-  log('scripts', Array.from(document.querySelectorAll('script[src]')).map(s => s.src));
+  function safe(v){
+    try { return typeof v === 'string' ? v : JSON.stringify(v); } catch { return String(v); }
+  }
 
-  window.addEventListener('error', (e) => {
+  function ensurePanel(){
+    var el = document.getElementById('__odontopro_debug__');
+    if (el) return el;
+    el = document.createElement('pre');
+    el.id = '__odontopro_debug__';
+    el.style.cssText = [
+      'position:fixed','left:0','right:0','bottom:0','max-height:45vh','overflow:auto',
+      'margin:0','padding:10px','z-index:2147483647','background:rgba(0,0,0,.85)',
+      'color:#00ff9a','font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace',
+      'white-space:pre-wrap','word-break:break-word','border-top:1px solid rgba(255,255,255,.15)'
+    ].join(';');
+    el.textContent = '[odontopro] debug overlay ativo\\n';
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') el.style.display = (el.style.display === 'none' ? 'block' : 'none');
+    });
+    document.documentElement.appendChild(el);
+    return el;
+  }
+
+  function log(){
+    var args = Array.prototype.slice.call(arguments);
+    try { console.log.apply(console, ['[odontopro]'].concat(args)); } catch {}
+    var panel = ensurePanel();
+    panel.textContent += args.map(safe).join(' ') + '\\n';
+  }
+
+  // Patch console.error/warn to also show in overlay
+  var _ce = console.error, _cw = console.warn;
+  console.error = function(){ log('console.error:', [].slice.call(arguments)); try { _ce.apply(console, arguments); } catch {} };
+  console.warn  = function(){ log('console.warn:',  [].slice.call(arguments)); try { _cw.apply(console, arguments); } catch {} };
+
+  log('boot', { href: location.href, baseURI: document.baseURI, origin: location.origin });
+  document.addEventListener('DOMContentLoaded', function(){ log('DOMContentLoaded'); });
+  window.addEventListener('load', function(){ log('window.load'); });
+
+  // Log scripts/links currently in HTML
+  try {
+    log('scripts', Array.from(document.querySelectorAll('script[src]')).map(function(s){ return s.src; }));
+    log('styles',  Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map(function(l){ return l.href; }));
+  } catch(e) { log('enumeration_failed', e && (e.stack || e.message || String(e))); }
+
+  // Capture resource load errors (JS/CSS 404, blocked, etc.)
+  window.addEventListener('error', function(e){
+    var t = e && e.target;
+    if (t && (t.tagName === 'SCRIPT' || t.tagName === 'LINK' || t.tagName === 'IMG')) {
+      log('resource_error', { tag: t.tagName, src: t.src || t.href || null, outerHTML: (t.outerHTML || '').slice(0, 300) });
+      return;
+    }
     log('window.error', {
       message: e && e.message,
       filename: e && e.filename,
@@ -60,12 +107,18 @@ const snippet = `
       colno: e && e.colno,
       error: e && e.error ? (e.error.stack || String(e.error)) : null
     });
-  });
+  }, true);
 
-  window.addEventListener('unhandledrejection', (e) => {
-    const r = e && e.reason;
+  window.addEventListener('unhandledrejection', function(e){
+    var r = e && e.reason;
     log('unhandledrejection', { reason: r ? (r.stack || r.message || String(r)) : r });
   });
+
+  // Quick sanity: show base tag (common issue with assets path)
+  try {
+    var b = document.querySelector('base');
+    log('base_tag', b ? (b.getAttribute('href') || '') : '(none)');
+  } catch {}
 })();
 </script>
 `;
