@@ -1,22 +1,64 @@
-# Stage 1: deps
-FROM node:18-alpine AS deps
-WORKDIR /app
-COPY package.json package-lock.json* yarn.lock* ./
-RUN npm ci --silent || npm i --silent
-
-# Stage 2: builder
+# Build stage
 FROM node:18-alpine AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-# run build if there's a build script; ignore failure if none
-RUN npm run build --silent || true
 
-# Stage 3: runner
-FROM node:18-alpine AS runner
+# Install build dependencies
+RUN apk add --no-cache python3 make g++
+
 WORKDIR /app
-ENV NODE_ENV=production
-COPY --from=builder /app . 
-EXPOSE 3000
-# Try to run "npm start" if present, otherwise try common build outputs.
-CMD ["sh","-c","if npm run | grep -q \"start\"; then npm start; elif [ -f dist/index.js ]; then node dist/index.js; elif [ -f build/index.js ]; then node build/index.js; else echo 'No start script found. Update Dockerfile to match your app.' && exit 1; fi"]
+
+# Copy package files
+COPY package*.json ./
+COPY bun.lockb* ./
+
+# Install dependencies
+RUN if [ -f bun.lockb ]; then \
+        npm install -g bun && bun install; \
+    else \
+        npm ci --frozen-lockfile; \
+    fi
+
+# Copy source code
+COPY src/ ./src/
+COPY public/ ./public/
+COPY index.html ./
+COPY vite.config.ts ./
+COPY tsconfig*.json ./
+COPY tailwind.config.ts ./
+COPY postcss.config.js ./
+COPY components.json ./
+
+# Build the application
+RUN if [ -f bun.lockb ]; then \
+        bun run build; \
+    else \
+        npm run build; \
+    fi
+
+# Verify build output
+RUN ls -la dist/
+
+# Production stage
+FROM nginx:alpine AS production
+
+# Install curl for healthcheck
+RUN apk add --no-cache curl
+
+# Copy built application
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Create nginx user and set permissions
+RUN chown -R nginx:nginx /usr/share/nginx/html && \
+    chmod -R 755 /usr/share/nginx/html
+
+# Expose port
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost/health || exit 1
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

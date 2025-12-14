@@ -1,43 +1,55 @@
 version: "3.9"
 
 services:
-  traefik:
-    image: traefik:v3.1
-    command:
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}"
-      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "letsencrypt:/letsencrypt"
-    networks:
-      - proxy
-
-  app:
-    image: ${DOCKER_IMAGE:-${DOCKERHUB_USER}/odontopro}:${IMAGE_TAG:-latest}
-    restart: unless-stopped
+  odontopro_backend:
+    # ...existing code...
+    image: montjon/teiaodonto:latest
     environment:
+      VITE_SUPABASE_PROJECT_ID: "vhkqyfimamqxarrrdeds"
+      VITE_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_pc7a9woXWbvU-iiXgPwfmg_K5lbkNJZ"
+      VITE_SUPABASE_URL: "https://vhkqyfimamqxarrrdeds.supabase.co"
       APP_PORT: ${APP_PORT:-3000}
-      DOMAIN: ${DOMAIN}
-      # ...adicione aqui outras variáveis do .env usando ${VAR_NAME} para o Portainer preencher...
+      DOMAIN: odontopro.teiasisfin.com.br
+    # ...existing code...
     labels:
       traefik.enable: "true"
-      traefik.http.routers.odontopro.rule: Host(`${DOMAIN}`)
-      traefik.http.routers.odontopro.entrypoints: websecure
-      traefik.http.routers.odontopro.tls.certresolver: letsencrypt
-      traefik.http.services.odontopro.loadbalancer.server.port: "${APP_PORT:-3000}"
+      traefik.http.routers.odontopro_backend.rule: Host(`${DOMAIN}`)
+      traefik.http.routers.odontopro_backend.entrypoints: websecure
+      traefik.http.routers.odontopro_backend.tls.certresolver: letsencrypt
+      traefik.http.services.odontopro_backend.loadbalancer.server.port: "3000"
+      traefik.http.middlewares.backend_headers.headers.customResponseHeaders.X-Frame-Options: "SAMEORIGIN"
+      traefik.http.middlewares.backend_headers.headers.customResponseHeaders.X-Content-Type-Options: "nosniff"
+      traefik.http.middlewares.backend_compress.compress: "true"
+      traefik.http.middlewares.backend_body_size.buffering.maxRequestBodyBytes: "20971520"
+    # Adicionado: expõe e mapeia a porta para debug/local access
+    expose:
+      - "3000"
+    ports:
+      - "3000:3000"
+    command:
+      - sh
+      - -c
+      - >
+        if [ -f package.json ] && npm run | grep -q "start"; then
+          npm start
+        elif [ -f dist/index.js ]; then
+          node dist/index.js
+        elif [ -f index.js ]; then
+          node index.js
+        elif [ -f server.js ]; then
+          node server.js
+        elif [ -d build ] || [ -d dist ]; then
+          npx --yes serve -s ${BUILD_DIR:-build} -l ${APP_PORT:-3000}
+        else
+          echo 'No start script or known entrypoint found. Update image or Dockerfile.' && exit 1
+        fi
+    restart: unless-stopped
     networks:
-      - proxy
+      - odontopro
 
+# ...existing code...
 networks:
-  proxy:
+  odontopro:
     external: false
 
 volumes:
