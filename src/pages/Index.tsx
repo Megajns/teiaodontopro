@@ -16,7 +16,7 @@ const Index = () => {
                   </svg>
                 </div>
                 <h1 className="text-5xl lg:text-6xl font-bold text-foreground leading-tight">
-                  <span className="gradient-hero bg-clip-text text-transparent">TeiaOdonto</span>
+                  <span className="gradient-hero bg-clip-text text-transparent">TeiaOdontoPRO</span>
                 </h1>
                 <p className="text-xl lg:text-2xl text-muted-foreground">
                   Sistema Completo de Gestão Odontológica
@@ -58,7 +58,7 @@ const Index = () => {
               <div className="absolute -inset-4 gradient-hero opacity-20 rounded-2xl blur-xl"></div>
               <img 
                 src={heroImage} 
-                alt="TeiaOdonto Sistema de Gestão" 
+                alt="TeiaOdontoPRO Sistema de Gestão" 
                 className="relative w-full h-auto rounded-2xl shadow-strong border border-border"
               />
             </div>

@@ -28,14 +28,16 @@ export default function Dashboard() {
       value: stats.totalPacientes.toLocaleString("pt-BR"),
       change: "Pacientes ativos no sistema",
       icon: Users,
-      color: "text-primary",
+      color: "neon-icon-blue",
+      className: "neon-card-blue",
     },
     {
       title: "Agendamentos Hoje",
       value: stats.agendamentosHoje.total.toString(),
       change: `${stats.agendamentosHoje.confirmados} confirmados, ${stats.agendamentosHoje.pendentes} pendentes`,
       icon: Calendar,
-      color: "text-secondary",
+      color: "neon-icon-purple",
+      className: "neon-card-purple",
     },
     {
       title: "Faturamento Mensal",
@@ -45,14 +47,16 @@ export default function Dashboard() {
       }).format(stats.faturamentoMensal),
       change: "Contas recebidas este mês",
       icon: DollarSign,
-      color: "text-success",
+      color: "neon-icon-green",
+      className: "neon-card-green",
     },
     {
       title: "Produtos em Falta",
       value: stats.produtosFalta.toString(),
       change: stats.produtosFalta > 0 ? "Necessário reposição" : "Estoque adequado",
       icon: Package,
-      color: stats.produtosFalta > 0 ? "text-warning" : "text-success",
+      color: "neon-icon-orange",
+      className: "neon-card-orange",
     },
   ];
 
@@ -82,7 +86,7 @@ export default function Dashboard() {
         {isLoading ? (
           <>
             {[1, 2, 3, 4].map((i) => (
-              <Card key={i} className="medical-card">
+              <Card key={i} className="animate-pulse bg-muted/20 border-border">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <Skeleton className="h-4 w-24" />
                   <Skeleton className="h-4 w-4 rounded-full" />
@@ -96,14 +100,14 @@ export default function Dashboard() {
           </>
         ) : (
           statsCards.map((stat) => (
-            <Card key={stat.title} className="medical-card">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <Card key={stat.title} className={`neon-card ${stat.className}`}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
                 <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                <stat.icon className={`h-5 w-5 ${stat.color}`} />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <p className="text-xs text-muted-foreground">{stat.change}</p>
+              <CardContent className="relative z-10">
+                <div className="text-2xl font-bold tracking-tight">{stat.value}</div>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 line-clamp-1">{stat.change}</p>
               </CardContent>
             </Card>
           ))

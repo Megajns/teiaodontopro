@@ -391,3 +391,73 @@
 .rdp-root {
   max-width: 100%;
 }
+
+/* Neon Gradient Cards */
+.neon-card {
+  @apply transition-all duration-300 border relative overflow-hidden;
+  border-color: rgba(var(--gradient-color), 0.1);
+}
+
+.neon-card::before {
+  content: '';
+  @apply absolute inset-0 opacity-[0.03] transition-opacity duration-300;
+  background: linear-gradient(135deg, var(--gradient-from), var(--gradient-to));
+}
+
+.neon-card:hover {
+  @apply transform -translate-y-1 shadow-lg;
+  border-color: rgba(var(--gradient-color), 0.3);
+}
+
+.neon-card:hover::before {
+  @apply opacity-[0.08];
+}
+
+.dark .neon-card {
+  @apply bg-[#1e293b]/40 backdrop-blur-xl border-white/5;
+}
+
+.dark .neon-card::before {
+  @apply opacity-[0.1];
+}
+
+.dark .neon-card:hover {
+  border-color: rgba(var(--gradient-color), 0.4);
+}
+
+.dark .neon-card:hover::before {
+  @apply opacity-[0.15];
+}
+
+.neon-card-blue {
+  --gradient-from: #00d2ff;
+  --gradient-to: #3a7bd5;
+  --gradient-color: 0, 210, 255;
+  @apply shadow-[0_0_20px_-10px_rgba(0,210,255,0.3)];
+}
+
+.neon-card-purple {
+  --gradient-from: #8e2de2;
+  --gradient-to: #4a00e0;
+  --gradient-color: 142, 45, 226;
+  @apply shadow-[0_0_20px_-10px_rgba(142,45,226,0.3)];
+}
+
+.neon-card-green {
+  --gradient-from: #11998e;
+  --gradient-to: #38ef7d;
+  --gradient-color: 56, 239, 125;
+  @apply shadow-[0_0_20px_-10px_rgba(56,239,125,0.3)];
+}
+
+.neon-card-orange {
+  --gradient-from: #f2994a;
+  --gradient-to: #f2c94c;
+  --gradient-color: 242, 153, 74;
+  @apply shadow-[0_0_20px_-10px_rgba(242,153,74,0.3)];
+}
+
+.neon-icon-blue { @apply text-[#00d2ff] drop-shadow-[0_0_8px_rgba(0,210,255,0.5)]; }
+.neon-icon-purple { @apply text-[#8e2de2] drop-shadow-[0_0_8px_rgba(142,45,226,0.5)]; }
+.neon-icon-green { @apply text-[#38ef7d] drop-shadow-[0_0_8px_rgba(56,239,125,0.5)]; }
+.neon-icon-orange { @apply text-[#f2994a] drop-shadow-[0_0_8px_rgba(242,153,74,0.5)]; }

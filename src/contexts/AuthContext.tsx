@@ -1,11 +1,17 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isMaster: boolean;
+  isClinicActive: boolean;
+  planFeatures: {
+    ativar_atendimento: boolean;
+  };
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -29,28 +35,93 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isMaster, setIsMaster] = useState(false);
+  const [isClinicActive, setIsClinicActive] = useState(true);
+  const [planFeatures, setPlanFeatures] = useState({ ativar_atendimento: false });
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    console.log('Auth state change:', { event: 'setup' });
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email || 'no user');
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
+    let mounted = true;
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session check:', session?.user?.email || 'no user');
+    // Função única para processar mudanças de estado
+    const processAuthState = async (session: Session | null) => {
+      if (!mounted) return;
+      
+      console.log('Processando estado de autenticação:', session?.user?.email || 'sem usuário');
+      
       setSession(session);
       setUser(session?.user ?? null);
-      setLoading(false);
+      
+      if (session) {
+        // Busca metadados, mas com limite de tempo para não travar o F5
+        const fetchMetadata = async () => {
+          try {
+            console.log('Iniciando busca de metadados...');
+            const { data: profile, error: pError } = await supabase
+              .from('profiles')
+              .select('is_master')
+              .eq('user_id', session.user.id)
+              .maybeSingle();
+              
+            if (mounted) {
+              if (pError) console.error('Erro profile:', pError);
+              setIsMaster(profile?.is_master || false);
+            }
+
+            const { data: clinic, error: cError } = await supabase
+              .from('informacoes_clinica')
+              .select('active, plano_id, planos(ativar_atendimento)')
+              .eq('user_id', session.user.id)
+              .maybeSingle();
+
+            if (mounted) {
+              if (cError) console.error('Erro clinica:', cError);
+              setIsClinicActive(clinic ? clinic.active : true);
+              
+              if (clinic?.planos) {
+                // @ts-ignore - planos is a single object because of maybeSingle and the relationship
+                setPlanFeatures({ ativar_atendimento: !!clinic.planos.ativar_atendimento });
+              }
+            }
+            console.log('Metadados carregados com sucesso');
+          } catch (error) {
+            console.error('Erro fatal ao carregar metadados:', error);
+          }
+        };
+
+        // Executamos a busca e aguardamos no máximo 2.5 segundos
+        await Promise.race([
+          fetchMetadata(),
+          new Promise(resolve => setTimeout(() => {
+            console.warn('Timeout na busca de metadados, continuando...');
+            resolve(null);
+          }, 2500))
+        ]);
+      } else {
+        setIsMaster(false);
+        setIsClinicActive(true);
+      }
+      
+      if (mounted) {
+        console.log('Finalizando estado de loading');
+        setLoading(false);
+      }
+    };
+
+    // 1. Escuta mudanças
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      processAuthState(session);
     });
 
-    return () => subscription.unsubscribe();
+    // 2. Recupera sessão inicial
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      processAuthState(session);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -77,18 +148,31 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signOut = async () => {
     try {
       console.log('Starting logout process...');
+      
+      // Clear React Query cache before anything else
+      queryClient.clear();
+      
+      // Attempt supabase sign out
       const { error } = await supabase.auth.signOut();
+      
       if (error) {
-        console.error('Supabase signOut error:', error);
-        throw error;
+        console.error('Supabase signOut error (ignoring and clearing local state):', error);
       }
-      console.log('Logout successful - clearing state');
-      // Clear local state immediately
+      
+      console.log('Logout state cleanup');
+    } catch (error) {
+      console.error('Unexpected error during sign out:', error);
+    } finally {
+      // ALWAYS clear local state regardless of server response
       setSession(null);
       setUser(null);
-    } catch (error) {
-      console.error('Error signing out:', error);
-      throw error;
+      setIsMaster(false);
+      setIsClinicActive(true);
+      setPlanFeatures({ ativar_atendimento: false });
+      
+      // Force remove any persistence from local storage just in case
+      localStorage.removeItem('supabase.auth.token');
+      sessionStorage.clear();
     }
   };
 
@@ -96,6 +180,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     user,
     session,
     loading,
+    isMaster,
+    isClinicActive,
+    planFeatures,
     signIn,
     signUp,
     signOut,

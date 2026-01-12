@@ -22,10 +22,11 @@ export const useDashboardStats = () => {
       return count || 0;
     },
     enabled: !!user?.id,
+    staleTime: 1000 * 60, // 1 minute
   });
 
   // Agendamentos de hoje
-  const { data: agendamentosHoje } = useQuery({
+  const { data: agendamentosHoje, isLoading: loadingAgendamentos } = useQuery({
     queryKey: ["dashboard-agendamentos-hoje", user?.id],
     queryFn: async () => {
       if (!user?.id) return { total: 0, confirmados: 0, pendentes: 0 };
@@ -53,10 +54,11 @@ export const useDashboardStats = () => {
       };
     },
     enabled: !!user?.id,
+    staleTime: 1000 * 60,
   });
 
   // Faturamento mensal (contas recebidas este mês)
-  const { data: faturamentoMensal = 0 } = useQuery({
+  const { data: faturamentoMensal = 0, isLoading: loadingFaturamento } = useQuery({
     queryKey: ["dashboard-faturamento-mensal", user?.id],
     queryFn: async () => {
       if (!user?.id) return 0;
@@ -79,10 +81,11 @@ export const useDashboardStats = () => {
       return total;
     },
     enabled: !!user?.id,
+    staleTime: 1000 * 60,
   });
 
   // Produtos com estoque baixo
-  const { data: produtosFalta = 0 } = useQuery({
+  const { data: produtosFalta = 0, isLoading: loadingEstoque } = useQuery({
     queryKey: ["dashboard-produtos-falta", user?.id],
     queryFn: async () => {
       if (!user?.id) return 0;
@@ -102,10 +105,11 @@ export const useDashboardStats = () => {
       return produtosAbaixoMinimo;
     },
     enabled: !!user?.id,
+    staleTime: 1000 * 60,
   });
 
   // Próximos agendamentos do dia
-  const { data: proximosAgendamentos = [] } = useQuery({
+  const { data: proximosAgendamentos = [], isLoading: loadingNext } = useQuery({
     queryKey: ["dashboard-proximos-agendamentos", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
@@ -156,10 +160,11 @@ export const useDashboardStats = () => {
       }));
     },
     enabled: !!user?.id,
+    staleTime: 1000 * 60,
   });
 
   // Itens de estoque baixo (detalhados)
-  const { data: estoqueBaixo = [] } = useQuery({
+  const { data: estoqueBaixo = [], isLoading: loadingLowEstoque } = useQuery({
     queryKey: ["dashboard-estoque-baixo", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
@@ -182,6 +187,7 @@ export const useDashboardStats = () => {
         })) || [];
     },
     enabled: !!user?.id,
+    staleTime: 1000 * 60,
   });
 
   return {
@@ -193,6 +199,6 @@ export const useDashboardStats = () => {
     },
     proximosAgendamentos,
     estoqueBaixo,
-    isLoading: false,
+    isLoading: loadingAgendamentos || loadingFaturamento || loadingEstoque || loadingNext || loadingLowEstoque,
   };
 };

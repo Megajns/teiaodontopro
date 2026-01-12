@@ -6,11 +6,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { MasterRoute } from "@/components/auth/MasterRoute";
 import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
 import Patients from "@/pages/Patients";
 import Appointments from "@/pages/Appointments";
 import Profile from "@/pages/Profile";
+import { MasterAdmin } from "@/pages/admin/MasterAdmin";
 import { Dentistas } from "@/pages/cadastros/Dentistas";
 import { OrdemServico } from "@/pages/cadastros/OrdemServico";
 import { Funcionarios } from "@/pages/cadastros/Funcionarios";
@@ -34,6 +36,11 @@ import ContatosUteis from "@/pages/utilitarios/ContatosUteis";
 import { SenhaAdmin } from "@/pages/configuracoes/SenhaAdmin";
 import { InformacoesClinica } from "@/pages/configuracoes/InformacoesClinica";
 import { Permissoes } from "@/pages/configuracoes/Permissoes";
+import Chat from "@/pages/atendimento/Chat";
+import Filas from "@/pages/atendimento/Filas";
+import Tags from "@/pages/atendimento/Tags";
+import RespostasRapidas from "@/pages/atendimento/RespostasRapidas";
+import Agendados from "@/pages/atendimento/Agendados";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +59,7 @@ const App = () => (
             <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
             <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/master" element={<MasterRoute><MasterAdmin /></MasterRoute>} />
             
             {/* Cadastro Routes */}
             <Route path="/cadastros/dentistas" element={<ProtectedRoute><Dentistas /></ProtectedRoute>} />
@@ -87,6 +95,13 @@ const App = () => (
             <Route path="/configuracoes/senha-admin" element={<ProtectedRoute><SenhaAdmin /></ProtectedRoute>} />
             <Route path="/configuracoes/informacoes-clinica" element={<ProtectedRoute><InformacoesClinica /></ProtectedRoute>} />
             <Route path="/configuracoes/permissoes" element={<ProtectedRoute><Permissoes /></ProtectedRoute>} />
+            
+            {/* Atendimento Routes */}
+            <Route path="/atendimento/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+            <Route path="/atendimento/filas" element={<ProtectedRoute><Filas /></ProtectedRoute>} />
+            <Route path="/atendimento/tags" element={<ProtectedRoute><Tags /></ProtectedRoute>} />
+            <Route path="/atendimento/respostas-rapidas" element={<ProtectedRoute><RespostasRapidas /></ProtectedRoute>} />
+            <Route path="/atendimento/agendados" element={<ProtectedRoute><Agendados /></ProtectedRoute>} />
             
             {/* Other Routes */}
             <Route path="/financial" element={<ProtectedRoute><div className="p-6">Módulo Financeiro em desenvolvimento</div></ProtectedRoute>} />

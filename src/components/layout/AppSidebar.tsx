@@ -33,6 +33,10 @@ import {
   Info,
   ShieldCheck,
   User,
+  MessageSquare,
+  Tags,
+  ListChecks,
+  Zap,
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -92,6 +96,14 @@ const configuracoesItems = [
   { title: "Permissões", url: "/configuracoes/permissoes", icon: ShieldCheck },
 ];
 
+const atendimentoItems = [
+  { title: "Chat", url: "/atendimento/chat", icon: MessageSquare },
+  { title: "Filas de Espera", url: "/atendimento/filas", icon: ListChecks },
+  { title: "Tags", url: "/atendimento/tags", icon: Tags },
+  { title: "Respostas Rápidas", url: "/atendimento/respostas-rapidas", icon: Zap },
+  { title: "Agendados", url: "/atendimento/agendados", icon: Calendar },
+];
+
 const menuItems = [
   { title: "Início", url: "/dashboard", icon: Home },
 ];
@@ -102,6 +114,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const currentPath = location.pathname;
   const isCollapsed = state === "collapsed";
+  const { user, isMaster, signOut, planFeatures } = useAuth();
 
   // Route match helpers for submenu opening
   const cadastroMatch = currentPath.startsWith("/cadastros") || currentPath === "/patients";
@@ -109,6 +122,7 @@ export function AppSidebar() {
   const pagamentosMatch = currentPath.startsWith("/pagamentos");
   const utilitariosMatch = currentPath.startsWith("/utilitarios");
   const configuracoesMatch = currentPath.startsWith("/configuracoes") || currentPath === "/profile";
+  const atendimentoMatch = currentPath.startsWith("/atendimento");
 
   // Active state helpers - only true when the parent menu should be highlighted
   const isCadastroActive = false; // Parent menu never highlighted, only children
@@ -116,6 +130,7 @@ export function AppSidebar() {
   const isPagamentosActive = false; // Parent menu never highlighted, only children
   const isUtilitariosActive = false; // Parent menu never highlighted, only children
   const isConfiguracoesActive = false; // Parent menu never highlighted, only children
+  const isAtendimentoActive = false;
 
   // Initialize open state from current route to avoid flicker
   const [isCadastroOpen, setIsCadastroOpen] = useState(cadastroMatch);
@@ -123,8 +138,8 @@ export function AppSidebar() {
   const [isPagamentosOpen, setIsPagamentosOpen] = useState(pagamentosMatch);
   const [isUtilitariosOpen, setIsUtilitariosOpen] = useState(utilitariosMatch);
   const [isConfiguracoesOpen, setIsConfiguracoesOpen] = useState(configuracoesMatch);
+  const [isAtendimentoOpen, setIsAtendimentoOpen] = useState(atendimentoMatch);
 
-  const { signOut } = useAuth();
   const { toast } = useToast();
 
   // Keep the matching group open on route change without closing others
@@ -134,7 +149,8 @@ export function AppSidebar() {
     if (pagamentosMatch) setIsPagamentosOpen(true);
     if (utilitariosMatch) setIsUtilitariosOpen(true);
     if (configuracoesMatch) setIsConfiguracoesOpen(true);
-  }, [cadastroMatch, financeiroMatch, pagamentosMatch, utilitariosMatch, configuracoesMatch]);
+    if (atendimentoMatch) setIsAtendimentoOpen(true);
+  }, [cadastroMatch, financeiroMatch, pagamentosMatch, utilitariosMatch, configuracoesMatch, atendimentoMatch]);
 
   const handleSignOut = async () => {
     try {
@@ -172,7 +188,7 @@ export function AppSidebar() {
           </div>
           {!isCollapsed && (
             <div className="min-w-0 flex-1">
-              <h2 className="text-base sm:text-lg font-semibold text-foreground truncate">TeiaOdonto</h2>
+              <h2 className="text-base sm:text-lg font-semibold text-foreground truncate">TeiaOdontoPRO</h2>
               <p className="text-xs text-muted-foreground truncate">Sistema Odontológico</p>
             </div>
           )}
@@ -184,6 +200,27 @@ export function AppSidebar() {
           <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
+              {isMaster && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink 
+                      to="/master" 
+                      end 
+                      className={({ isActive }) => 
+                        `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                          isActive 
+                          ? "bg-amber-100 text-amber-900 font-bold" 
+                          : "text-amber-600 hover:bg-amber-50"
+                        }`
+                      }
+                    >
+                      <Shield className="w-4 h-4" />
+                      {!isCollapsed && <span>Painel Master Admin</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
@@ -204,6 +241,43 @@ export function AppSidebar() {
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
+              {/* Atendimento with submenu (Plan controlled) */}
+              {(planFeatures.ativar_atendimento || isMaster) && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    onClick={() => setIsAtendimentoOpen(!isAtendimentoOpen)}
+                    className={getParentNavClass(isAtendimentoActive)}
+                  >
+                    <MessageSquare className={isAtendimentoActive ? "w-4 h-4 text-primary" : "w-4 h-4 text-green-600"} />
+                    {!isCollapsed && (
+                      <>
+                        <span className={isAtendimentoActive ? "text-primary font-bold" : "text-green-600 font-bold"}>Atendimento</span>
+                        {isAtendimentoOpen ? (
+                          <ChevronDown className="w-4 h-4 ml-auto" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4 ml-auto" />
+                        )}
+                      </>
+                    )}
+                  </SidebarMenuButton>
+                  
+                  {isAtendimentoOpen && !isCollapsed && (
+                    <SidebarMenuSub>
+                      {atendimentoItems.map((item) => (
+                        <SidebarMenuSubItem key={item.title}>
+                          <SidebarMenuSubButton asChild isActive={isActive(item.url)}>
+                            <NavLink to={item.url} end>
+                              <item.icon className="w-3 h-3" />
+                              <span>{item.title}</span>
+                            </NavLink>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
+                  )}
+                </SidebarMenuItem>
+              )}
               
               {/* Cadastros with submenu */}
               <SidebarMenuItem>

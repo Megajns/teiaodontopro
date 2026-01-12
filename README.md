@@ -1,10 +1,10 @@
-# 🦷 TeiaOdonto
+# 🦷 TeiaOdontoPRO
 
 Sistema completo de gestão para clínicas odontológicas desenvolvido com tecnologias modernas e interface intuitiva.
 
 ## 📋 Sobre o Projeto
 
-O **TeiaOdonto** é uma solução abrangente para gerenciamento de clínicas odontológicas, oferecendo funcionalidades completas para:
+O **TeiaOdontoPRO** é uma solução abrangente para gerenciamento de clínicas odontológicas, oferecendo funcionalidades completas para:
 
 - 👥 **Gestão de Pacientes** - Cadastro, fichas clínicas, odontograma e histórico
 - 📅 **Agenda** - Controle de consultas e horários disponíveis

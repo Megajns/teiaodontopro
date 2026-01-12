@@ -21,22 +21,21 @@ export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Buscar configurações de registro (pega do primeiro usuário do sistema)
+  // Buscar configurações globais (permitir registro público)
   const { data: permitirRegistro = true } = useQuery({
     queryKey: ['permitir-registro-publico'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('configuracoes_sistema')
-        .select('permitir_registro')
-        .limit(1)
+        .from('configuracoes_globais')
+        .select('permitir_cadastro_publico')
         .maybeSingle();
 
       if (error) {
-        console.error('Erro ao buscar configurações:', error);
+        console.error('Erro ao buscar configurações globais:', error);
         return true; // Default: permitir registro
       }
 
-      return data?.permitir_registro ?? true;
+      return data?.permitir_cadastro_publico ?? true;
     },
   });
 
